@@ -34,8 +34,18 @@ class RedLock
             $startTime = microtime(true) * 1000;
 
             foreach ($this->instances as $instance) {
+                
                 if ($this->lockInstance($instance, $resource, $token, $ttl)) {
                     $n++;
+                } else {
+                    # KeyDB Master-Slave-Master Replication: Check if the key with
+                    # our value already exists, because then it already has been
+                    # replicated
+                    $lock = $instance->get($resource);
+
+                    if($lock === $token) {
+                        $n++;
+                    }
                 }
             }
 
